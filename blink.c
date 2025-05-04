@@ -6,6 +6,10 @@
 #include "hardware/i2c.h"
 #include "lib/ssd1306.h"
 #include "lib/font.h"
+#include "lib/led_matriz.h"
+#include "hardware/pio.h"
+#include "pio_matriz.pio.h"
+#include "hardware/clocks.h"
 #include <stdio.h>
 
 #define led_pin_green 11
@@ -40,11 +44,44 @@ void vBlinkTask(){
     }
 }
 
+// Função para desenho na matriz de LED's
+void vMatrizTask(){
+    PIO pio = pio0;
+    uint sm = 0;
+    uint offset = pio_add_program(pio, &pio_matriz_program);
+    pio_matriz_program_init(pio, sm, offset, pino_matriz);
+    
+    while(true){
+        desenhar_seta_direita();
+        desenho_pio(0, pio, sm); // Atualiza a matriz de LEDs
+        vTaskDelay(pdMS_TO_TICKS(200));
+        limpar_todos_leds();
+        desenho_pio(0, pio, sm);
+        vTaskDelay(pdMS_TO_TICKS(200));
+        desenhar_exclamacao();
+        desenho_pio(0, pio, sm); // Atualiza a matriz de LEDs
+        vTaskDelay(pdMS_TO_TICKS(200));
+        limpar_todos_leds();
+        desenho_pio(0, pio, sm);
+        vTaskDelay(pdMS_TO_TICKS(200));
+        desenhar_proibido();
+        desenho_pio(0, pio, sm); // Atualiza a matriz de LEDs
+        vTaskDelay(pdMS_TO_TICKS(200));
+        limpar_todos_leds();
+        desenho_pio(0, pio, sm);
+        vTaskDelay(pdMS_TO_TICKS(200));
+
+    }
+}
+
 // Função para desenho no display
 void vDisplayTask(){
 
     while(true){
         ssd1306_fill(&ssd, !cor);                                   // Limpa o display
+        ssd1306_draw_string(&ssd, "VERDE", 10, 10);
+        ssd1306_draw_string(&ssd, "AMARELO", 10, 30);
+        ssd1306_draw_string(&ssd, "VERMELHO", 10, 50);
         ssd1306_rect(&ssd, 3, 90, 21, 18, cor, cor);                // Retângulo cheio
         ssd1306_rect(&ssd, 22, 90, 21, 18, cor, !cor);              // Retângulo vazio
         ssd1306_rect(&ssd, 41, 90, 21, 18, cor, !cor);              // Retângulo vazio
@@ -53,6 +90,9 @@ void vDisplayTask(){
         ssd1306_send_data(&ssd);                                    // Atualiza o display
         vTaskDelay(pdMS_TO_TICKS(980));
         ssd1306_fill(&ssd, !cor);                                   // Limpa o display
+        ssd1306_draw_string(&ssd, "VERDE", 10, 10);
+        ssd1306_draw_string(&ssd, "AMARELO", 10, 30);
+        ssd1306_draw_string(&ssd, "VERMELHO", 10, 50);
         ssd1306_rect(&ssd, 3, 90, 21, 18, cor, !cor);                // Retângulo vazio
         ssd1306_rect(&ssd, 22, 90, 21, 18, cor, cor);              // Retângulo cheio
         ssd1306_rect(&ssd, 41, 90, 21, 18, cor, !cor);              // Retângulo vazio
@@ -61,6 +101,9 @@ void vDisplayTask(){
         ssd1306_send_data(&ssd);                                    // Atualiza o display
         vTaskDelay(pdMS_TO_TICKS(980));
         ssd1306_fill(&ssd, !cor);                                   // Limpa o display
+        ssd1306_draw_string(&ssd, "VERDE", 10, 10);
+        ssd1306_draw_string(&ssd, "AMARELO", 10, 30);
+        ssd1306_draw_string(&ssd, "VERMELHO", 10, 50);
         ssd1306_rect(&ssd, 3, 90, 21, 18, cor, !cor);                // Retângulo vazio
         ssd1306_rect(&ssd, 22, 90, 21, 18, cor, !cor);              // Retângulo vazio
         ssd1306_rect(&ssd, 41, 90, 21, 18, cor, cor);              // Retângulo cheio
@@ -169,6 +212,8 @@ int main(){
     /* xTaskCreate(vBuzzerTask, "Buzzer Task",
          configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, NULL);  */
     xTaskCreate(vDisplayTask, "Display Task",
+         configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, NULL); 
+    xTaskCreate(vMatrizTask, "Matriz Task",
          configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, NULL); 
     vTaskStartScheduler();
     panic_unsupported();
