@@ -1,3 +1,17 @@
+# == DO NOT EDIT THE FOLLOWING LINES for the Raspberry Pi Pico VS Code Extension to work ==
+if(WIN32)
+    set(USERHOME $ENV{USERPROFILE})
+else()
+    set(USERHOME $ENV{HOME})
+endif()
+set(sdkVersion 2.1.1)
+set(toolchainVersion 14_2_Rel1)
+set(picotoolVersion 2.1.1)
+set(picoVscode ${USERHOME}/.pico-sdk/cmake/pico-vscode.cmake)
+if (EXISTS ${picoVscode})
+    include(${picoVscode})
+endif()
+# ====================================================================================
 
 
 cmake_minimum_required(VERSION 3.13)
@@ -6,8 +20,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(PICO_BOARD pico_w CACHE STRING "Board type")
 include(pico_sdk_import.cmake)
-set(FREERTOS_KERNEL_PATH "Z:/FreeRTOS-Kernel")
-set(FREERTOS_KERNEL_PATH "Z:/FreeRTOS-Kernel")
+set(FREERTOS_KERNEL_PATH "C:/Users/Miller/Desktop/FreeRTOS-Kernel")
 include(${FREERTOS_KERNEL_PATH}/portable/ThirdParty/GCC/RP2040/FreeRTOS_Kernel_import.cmake)
 
 project(PiscaLed C CXX ASM)
@@ -25,6 +38,7 @@ target_link_libraries(${PROJECT_NAME}
         pico_stdlib 
         FreeRTOS-Kernel         # Kernel do FreeRTOS
         FreeRTOS-Kernel-Heap4   # Gerenciador de memoria
+        hardware_pwm
         )
 
 pico_enable_stdio_usb(${PROJECT_NAME} 1)
