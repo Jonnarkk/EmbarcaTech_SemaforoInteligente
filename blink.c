@@ -25,11 +25,10 @@
 
 // Variáveis globais
 volatile bool modo = true;
-volatile bool cor = true;           // Variável para utilizar funções no display
-ssd1306_t ssd;                      // Inicializa a estrutura do display
-absolute_time_t last_time = 0;      // Variável para debounce
-bool verde = false, vermelho = false, amarelo = false, noturno = false;
-volatile bool botao_pressionado = false;
+volatile bool cor = true;                                                           // Variável para utilizar funções no display
+ssd1306_t ssd;                                                                      // Inicializa a estrutura do display
+volatile bool verde = false, vermelho = false, amarelo = false, noturno = false;    // Variáveis para controle do Buzzer
+volatile bool botao_pressionado = false;                                            // Variável para interrupção do botão A
 
 
 // Handles das tasks
@@ -39,6 +38,55 @@ TaskHandle_t xTaskMatrizNormal = NULL;
 TaskHandle_t xTaskMatrizNoturna = NULL;
 TaskHandle_t xTaskDisplayNormal = NULL;
 TaskHandle_t xTaskDisplayNoturna = NULL;
+
+void vTaskControle(){
+    const TickType_t xDelay = pdMS_TO_TICKS(20); // Polling a cada 20ms
+    bool debounce = false;
+    absolute_time_t last_press = 0;
+
+    while(true) {
+        if(botao_pressionado) {
+            absolute_time_t now = get_absolute_time();
+            
+            // Debounce - verifica se já passou tempo suficiente
+            if(absolute_time_diff_us(last_press, now) > 200000) { // 200ms
+                last_press = now;
+                modo = !modo; // Alterna o modo
+                
+                // Gerencia as tasks conforme o novo modo
+                if(modo) {
+                    // Modo normal
+                     vTaskResume(xTaskBlinkNormal);
+                    vTaskSuspend(xTaskBlinkNoturna);
+
+                    vTaskResume(xTaskMatrizNormal);
+                    vTaskSuspend(xTaskMatrizNoturna);
+
+                    vTaskResume(xTaskDisplayNormal);
+                    vTaskSuspend(xTaskDisplayNoturna);
+
+                noturno = false;
+                } else {
+                    // Modo noturno
+                    vTaskResume(xTaskBlinkNoturna);
+                    vTaskSuspend(xTaskBlinkNormal);
+
+                    vTaskResume(xTaskMatrizNoturna);
+                    vTaskSuspend(xTaskMatrizNormal);
+
+                    vTaskResume(xTaskDisplayNoturna);
+                    vTaskSuspend(xTaskDisplayNormal);
+                    noturno = true;
+                    verde = amarelo = vermelho = false;
+                }
+            }
+            
+            botao_pressionado = false; // Reseta o flag
+        }
+        
+        vTaskDelay(xDelay); // Espera para próxima verificação
+    }
+}
 
 void vBlinkTask_Normal(){
 
@@ -191,6 +239,29 @@ void vDisplayTask_Noturno(){
     }
 }
 
+void vBuzzerTask(){
+    while(true){
+        if(verde){
+            sirene(150, 880, 800);
+            vTaskDelay(pdMS_TO_TICKS(200)); 
+        }
+        else if(amarelo){
+            for(int i = 0; i < 5; i++){
+                sirene(500, 400, 100);
+                vTaskDelay(pdMS_TO_TICKS(10)); 
+            }
+        }
+        else if(vermelho){
+            sirene(500, 700, 500);
+            vTaskDelay(pdMS_TO_TICKS(1500)); 
+        }
+        else if(noturno){
+            sirene(300, 250, 1000);
+            vTaskDelay(pdMS_TO_TICKS(2000));
+        }
+    }
+}
+
 // Função para soar o alarme
 void sirene(uint freq_grave, uint freq_agudo, uint duration) {
     uint slice_num = pwm_gpio_to_slice_num(BUZZER);
@@ -216,29 +287,6 @@ void sirene(uint freq_grave, uint freq_agudo, uint duration) {
     pwm_set_gpio_level(BUZZER, 0);
 }
 
-void vBuzzerTask(){
-    while(true){
-        if(verde){
-            sirene(150, 880, 800);
-            vTaskDelay(pdMS_TO_TICKS(200)); 
-        }
-        else if(amarelo){
-            for(int i = 0; i < 5; i++){
-                sirene(500, 400, 100);
-                vTaskDelay(pdMS_TO_TICKS(10)); 
-            }
-        }
-        else if(vermelho){
-            sirene(500, 700, 500);
-            vTaskDelay(pdMS_TO_TICKS(1500)); 
-        }
-        else if(noturno){
-            sirene(300, 250, 1000);
-            vTaskDelay(pdMS_TO_TICKS(2000));
-        }
-    }
-}
-
 
 void gpio_irq_handler(uint gpio, uint32_t events){
     if(gpio == botaoB){
@@ -257,54 +305,7 @@ void gpio_irq_handler(uint gpio, uint32_t events){
     }
 }
 
-void vTaskControle(){
-    const TickType_t xDelay = pdMS_TO_TICKS(20); // Polling a cada 20ms
-    bool debounce = false;
-    absolute_time_t last_press = 0;
 
-    while(true) {
-        if(botao_pressionado) {
-            absolute_time_t now = get_absolute_time();
-            
-            // Debounce - verifica se já passou tempo suficiente
-            if(absolute_time_diff_us(last_press, now) > 200000) { // 200ms
-                last_press = now;
-                modo = !modo; // Alterna o modo
-                
-                // Gerencia as tasks conforme o novo modo
-                if(modo) {
-                    // Modo normal
-                     vTaskResume(xTaskBlinkNormal);
-                    vTaskSuspend(xTaskBlinkNoturna);
-
-                    vTaskResume(xTaskMatrizNormal);
-                    vTaskSuspend(xTaskMatrizNoturna);
-
-                    vTaskResume(xTaskDisplayNormal);
-                    vTaskSuspend(xTaskDisplayNoturna);
-
-                noturno = false;
-                } else {
-                    // Modo noturno
-                    vTaskResume(xTaskBlinkNoturna);
-                    vTaskSuspend(xTaskBlinkNormal);
-
-                    vTaskResume(xTaskMatrizNoturna);
-                    vTaskSuspend(xTaskMatrizNormal);
-
-                    vTaskResume(xTaskDisplayNoturna);
-                    vTaskSuspend(xTaskDisplayNormal);
-                    noturno = true;
-                    verde = amarelo = vermelho = false;
-                }
-            }
-            
-            botao_pressionado = false; // Reseta o flag
-        }
-        
-        vTaskDelay(xDelay); // Espera para próxima verificação
-    }
-}
 
 void setup(){
     // Inicialização do LED RGB
@@ -358,28 +359,32 @@ int main(){
     setup();
     stdio_init_all();
 
+    // Tasks do Blink
     xTaskCreate(vBlinkTask_Normal, "Blink Task Normal", 
     configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, &xTaskBlinkNormal);
     xTaskCreate(vBlinkTask_Noturno, "Blink Task Noturna",
     configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, &xTaskBlinkNoturna); 
 
+    // Tasks da Matriz
     xTaskCreate(vMatrizTask_Normal, "Matriz Task Normal",
     configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, &xTaskMatrizNormal); 
     xTaskCreate(vMatrizTask_Noturna, "Matriz Task Noturna",
     configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, &xTaskMatrizNoturna); 
 
+    // Tasks do Display
     xTaskCreate(vDisplayTask_Normal, "Display Task Normal",
         configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, &xTaskDisplayNormal); 
     xTaskCreate(vDisplayTask_Noturno, "Display Task Noturna",
         configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, &xTaskDisplayNoturna); 
     
+    // Task do Buzzer
     xTaskCreate(vBuzzerTask, "Buzzer Task",
          configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, NULL); 
 
-    // Cria a task de controle de modo com alta prioridade
+    // Task de controle com alta prioridade
     xTaskCreate(vTaskControle, "Controle Task", configMINIMAL_STACK_SIZE, NULL, 2, NULL);
 
-    // Inicialmente, suspende a tarefa do modo noturno
+    // Inicialmente, suspende as tarefas do modo noturno
         vTaskSuspend(xTaskBlinkNoturna);
         vTaskSuspend(xTaskMatrizNoturna);
         vTaskSuspend(xTaskDisplayNoturna);
