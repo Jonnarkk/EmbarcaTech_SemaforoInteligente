@@ -32,12 +32,12 @@ volatile bool botao_pressionado = false;                                        
 
 
 // Handles das tasks
-TaskHandle_t xTaskBlinkNormal = NULL;    // Handle para tarefas do modo normal
-TaskHandle_t xTaskBlinkNoturna = NULL;   // Handle para tarefas do modo noturno
-TaskHandle_t xTaskMatrizNormal = NULL;
-TaskHandle_t xTaskMatrizNoturna = NULL;
-TaskHandle_t xTaskDisplayNormal = NULL;
-TaskHandle_t xTaskDisplayNoturna = NULL;
+TaskHandle_t xTaskBlinkNormal = NULL;       // Handle para tarefa do blink do modo normal
+TaskHandle_t xTaskBlinkNoturna = NULL;      // Handle para tarefa do blink do modo noturno
+TaskHandle_t xTaskMatrizNormal = NULL;      // Handle para tarefa da matriz do modo normal
+TaskHandle_t xTaskMatrizNoturna = NULL;     // Handle para tarefa da matriz do modo noturno
+TaskHandle_t xTaskDisplayNormal = NULL;     // Handle para tarefa do display do modo normal
+TaskHandle_t xTaskDisplayNoturna = NULL;    // Handle para tarefa do display do modo noturno
 
 void vTaskControle(){
     const TickType_t xDelay = pdMS_TO_TICKS(20); // Polling a cada 20ms
@@ -51,9 +51,9 @@ void vTaskControle(){
             // Debounce - verifica se já passou tempo suficiente
             if(absolute_time_diff_us(last_press, now) > 200000) { // 200ms
                 last_press = now;
-                modo = !modo; // Alterna o modo
+                modo = !modo; 
                 
-                // Gerencia as tasks conforme o novo modo
+                // Gerencia as tasks conforme o estado da variável modo
                 if(modo) {
                     // Modo normal
                      vTaskResume(xTaskBlinkNormal);
@@ -88,6 +88,7 @@ void vTaskControle(){
     }
 }
 
+// Função do pisca para modo normal
 void vBlinkTask_Normal(){
 
     while (true){
@@ -112,6 +113,7 @@ void vBlinkTask_Normal(){
     }
 }
 
+// Função do pisca para modo noturno
 void vBlinkTask_Noturno(){
 
     while (true){
@@ -125,7 +127,7 @@ void vBlinkTask_Noturno(){
     }
 }
 
-// Função para desenho na matriz de LED's
+// Função para desenho na matriz de LED's no modo normal
 void vMatrizTask_Normal(){
     PIO pio = pio0;
     uint sm = 0;
@@ -154,6 +156,7 @@ void vMatrizTask_Normal(){
     }
 }
 
+// Task para desenho na matriz de LED's no modo noturno
 void vMatrizTask_Noturna(){
     PIO pio = pio0;
     uint sm = 0;
@@ -170,7 +173,7 @@ void vMatrizTask_Noturna(){
     }
 }
 
-// Função para desenho no display
+// Task para desenho no display no modo normal
 void vDisplayTask_Normal(){
 
     while(true){
@@ -210,7 +213,7 @@ void vDisplayTask_Normal(){
     }
 }
 
-// Função para desenho no display
+// Task para desenho no display do modo noturno
 void vDisplayTask_Noturno(){
 
     while(true){
@@ -239,6 +242,7 @@ void vDisplayTask_Noturno(){
     }
 }
 
+// Task do Buzzer
 void vBuzzerTask(){
     while(true){
         if(verde){
@@ -287,7 +291,7 @@ void sirene(uint freq_grave, uint freq_agudo, uint duration) {
     pwm_set_gpio_level(BUZZER, 0);
 }
 
-
+// Função Handler das interrupções
 void gpio_irq_handler(uint gpio, uint32_t events){
     if(gpio == botaoB){
         PIO pio = pio0;
