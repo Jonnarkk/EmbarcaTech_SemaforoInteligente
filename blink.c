@@ -28,6 +28,7 @@ volatile bool modo = true;
 volatile bool cor = true;           // Variável para utilizar funções no display
 ssd1306_t ssd;                      // Inicializa a estrutura do display
 absolute_time_t last_time = 0;      // Variável para debounce
+bool verde = false, vermelho = false, amarelo = false, noturno = false;
 
 
 // Handles das tasks
@@ -41,16 +42,22 @@ TaskHandle_t xTaskDisplayNoturna = NULL;
 void vBlinkTask_Normal(){
 
     while (true){
+        vermelho = false;
+        verde = true;
         gpio_put(led_pin_green, true);
-        vTaskDelay(pdMS_TO_TICKS(2000));
+        vTaskDelay(pdMS_TO_TICKS(4000));
 
+        verde = false;
+        amarelo = true;
         gpio_put(led_pin_red, true);
-        vTaskDelay(pdMS_TO_TICKS(2000));
+        vTaskDelay(pdMS_TO_TICKS(4000));
         
+        amarelo = false;
+        vermelho = true;
         gpio_put(led_pin_blue, false);
         gpio_put(led_pin_green, false);
         gpio_put(led_pin_red, true);
-        vTaskDelay(pdMS_TO_TICKS(2000));
+        vTaskDelay(pdMS_TO_TICKS(4000));
         gpio_put(led_pin_red, false);
         printf("Blink\n");
     }
@@ -61,10 +68,10 @@ void vBlinkTask_Noturno(){
     while (true){
         gpio_put(led_pin_green, true);
         gpio_put(led_pin_red, true);
-        vTaskDelay(pdMS_TO_TICKS(2000));
+        vTaskDelay(pdMS_TO_TICKS(3000));
         gpio_put(led_pin_green, false);
         gpio_put(led_pin_red, false);
-        vTaskDelay(pdMS_TO_TICKS(2000));
+        vTaskDelay(pdMS_TO_TICKS(3000));
         printf("Blink Noturno\n");
     }
 }
@@ -79,19 +86,19 @@ void vMatrizTask_Normal(){
     while(true){
             desenhar_seta_direita();
             desenho_pio(0, pio, sm); // Atualiza a matriz de LEDs
-            vTaskDelay(pdMS_TO_TICKS(1000));
+            vTaskDelay(pdMS_TO_TICKS(3000));
             limpar_todos_leds();
             desenho_pio(0, pio, sm);
             vTaskDelay(pdMS_TO_TICKS(1000));
             desenhar_exclamacao();
             desenho_pio(0, pio, sm); // Atualiza a matriz de LEDs
-            vTaskDelay(pdMS_TO_TICKS(1000));
+            vTaskDelay(pdMS_TO_TICKS(3000));
             limpar_todos_leds();
             desenho_pio(0, pio, sm);
             vTaskDelay(pdMS_TO_TICKS(1000));
             desenhar_proibido();
             desenho_pio(0, pio, sm); // Atualiza a matriz de LEDs
-            vTaskDelay(pdMS_TO_TICKS(1000));
+            vTaskDelay(pdMS_TO_TICKS(3000));
             limpar_todos_leds();
             desenho_pio(0, pio, sm);
             vTaskDelay(pdMS_TO_TICKS(1000));
@@ -128,7 +135,7 @@ void vDisplayTask_Normal(){
         ssd1306_rect(&ssd, 3, 90, 3, 56, cor, cor);                // Retângulo cheio esquerdo
         ssd1306_rect(&ssd, 3, 108, 3, 56, cor, cor);                // Retângulo cheio direito
         ssd1306_send_data(&ssd);                                    // Atualiza o display
-        vTaskDelay(pdMS_TO_TICKS(1980));
+        vTaskDelay(pdMS_TO_TICKS(3980));
         ssd1306_fill(&ssd, !cor);                                   // Limpa o display
         ssd1306_draw_string(&ssd, "VERDE", 10, 10);
         ssd1306_draw_string(&ssd, "AMARELO", 10, 30);
@@ -139,7 +146,7 @@ void vDisplayTask_Normal(){
         ssd1306_rect(&ssd, 3, 90, 3, 56, cor, cor);                // Retângulo cheio esquerdo
         ssd1306_rect(&ssd, 3, 108, 3, 56, cor, cor);                // Retângulo cheio direito
         ssd1306_send_data(&ssd);                                    // Atualiza o display
-        vTaskDelay(pdMS_TO_TICKS(1980));
+        vTaskDelay(pdMS_TO_TICKS(3980));
         ssd1306_fill(&ssd, !cor);                                   // Limpa o display
         ssd1306_draw_string(&ssd, "VERDE", 10, 10);
         ssd1306_draw_string(&ssd, "AMARELO", 10, 30);
@@ -150,7 +157,7 @@ void vDisplayTask_Normal(){
         ssd1306_rect(&ssd, 3, 90, 3, 56, cor, cor);                // Retângulo cheio esquerdo
         ssd1306_rect(&ssd, 3, 108, 3, 56, cor, cor);                // Retângulo cheio direito
         ssd1306_send_data(&ssd);                                    // Atualiza o display
-        vTaskDelay(pdMS_TO_TICKS(1980));
+        vTaskDelay(pdMS_TO_TICKS(3980));
     }
 }
 
@@ -168,7 +175,7 @@ void vDisplayTask_Noturno(){
         ssd1306_rect(&ssd, 3, 90, 3, 56, cor, cor);                // Retângulo cheio esquerdo
         ssd1306_rect(&ssd, 3, 108, 3, 56, cor, cor);                // Retângulo cheio direito
         ssd1306_send_data(&ssd);                                    // Atualiza o display
-        vTaskDelay(pdMS_TO_TICKS(1980));
+        vTaskDelay(pdMS_TO_TICKS(2980));
         ssd1306_fill(&ssd, !cor);                                   // Limpa o display
         ssd1306_draw_string(&ssd, "VERDE", 10, 10);
         ssd1306_draw_string(&ssd, "AMARELO", 10, 30);
@@ -179,7 +186,7 @@ void vDisplayTask_Noturno(){
         ssd1306_rect(&ssd, 3, 90, 3, 56, cor, cor);                // Retângulo cheio esquerdo
         ssd1306_rect(&ssd, 3, 108, 3, 56, cor, cor);                // Retângulo cheio direito
         ssd1306_send_data(&ssd);                                    // Atualiza o display
-        vTaskDelay(pdMS_TO_TICKS(1980));
+        vTaskDelay(pdMS_TO_TICKS(2980));
     }
 }
 
@@ -208,17 +215,41 @@ void sirene(uint freq_grave, uint freq_agudo, uint duration) {
     pwm_set_gpio_level(BUZZER, 0);
 }
 
-void vBuzzerTask_Normal(){
+void vBuzzerTask(){
     while(true){
-        sirene(200, 200, 500);
-        vTaskDelay(pdMS_TO_TICKS(500));
+        if(verde){
+            sirene(150, 880, 800);
+            pdMS_TO_TICKS(200); 
+        }
+        else if(amarelo){
+            for(int i = 0; i < 3; i++){
+                sirene(500, 400, 150);
+                pdMS_TO_TICKS(100);
+            }
+        }
+        else if(vermelho){
+            sirene(500, 700, 500);
+            vTaskDelay(pdMS_TO_TICKS(1500)); 
+        }
+        else if(noturno){
+            sirene(300, 250, 1000);
+            vTaskDelay(pdMS_TO_TICKS(2000));
+        }
     }
 }
 
 
 void gpio_irq_handler(uint gpio, uint32_t events){
-    if(gpio == botaoB)
+    if(gpio == botaoB){
+        PIO pio = pio0;
+        uint sm = 0;
+        uint offset = pio_add_program(pio, &pio_matriz_program);
+        pio_matriz_program_init(pio, sm, offset, pino_matriz);
+
+        limpar_todos_leds();
+        desenho_pio(0, pio, sm);
         reset_usb_boot(0, 0);
+    }
     
     if(gpio == botao_A){
         absolute_time_t current = to_us_since_boot(get_absolute_time());
@@ -234,6 +265,8 @@ void gpio_irq_handler(uint gpio, uint32_t events){
 
                 vTaskResume(xTaskDisplayNormal);
                 vTaskSuspend(xTaskDisplayNoturna);
+
+                noturno = false;
             }
             else{
                 vTaskResume(xTaskBlinkNoturna);
@@ -244,6 +277,8 @@ void gpio_irq_handler(uint gpio, uint32_t events){
 
                 vTaskResume(xTaskDisplayNoturna);
                 vTaskSuspend(xTaskDisplayNormal);
+                noturno = true;
+                verde = amarelo = vermelho = false;
             }
         }
         last_time = current;
@@ -318,8 +353,8 @@ int main(){
     xTaskCreate(vDisplayTask_Noturno, "Display Task Noturna",
         configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, &xTaskDisplayNoturna); 
     
-    /* xTaskCreate(vBuzzerTask, "Buzzer Task",
-         configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, NULL);  */
+    xTaskCreate(vBuzzerTask, "Buzzer Task",
+         configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, NULL); 
 
     // Inicialmente, suspende a tarefa do modo noturno
         vTaskSuspend(xTaskBlinkNoturna);
