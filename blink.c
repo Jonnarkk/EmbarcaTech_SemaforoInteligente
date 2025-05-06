@@ -29,6 +29,7 @@ volatile bool cor = true;           // Variável para utilizar funções no disp
 ssd1306_t ssd;                      // Inicializa a estrutura do display
 absolute_time_t last_time = 0;      // Variável para debounce
 bool verde = false, vermelho = false, amarelo = false, noturno = false;
+volatile bool botao_pressionado = false;
 
 
 // Handles das tasks
@@ -252,39 +253,58 @@ void gpio_irq_handler(uint gpio, uint32_t events){
     }
     
     if(gpio == botao_A){
-        absolute_time_t current = to_us_since_boot(get_absolute_time());
-        if(current - last_time > 200000){
-            modo = !modo;
-
-            if(modo){
-                vTaskResume(xTaskBlinkNormal);
-                vTaskSuspend(xTaskBlinkNoturna);
-
-                vTaskResume(xTaskMatrizNormal);
-                vTaskSuspend(xTaskMatrizNoturna);
-
-                vTaskResume(xTaskDisplayNormal);
-                vTaskSuspend(xTaskDisplayNoturna);
-
-                noturno = false;
-            }
-            else{
-                vTaskResume(xTaskBlinkNoturna);
-                vTaskSuspend(xTaskBlinkNormal);
-
-                vTaskResume(xTaskMatrizNoturna);
-                vTaskSuspend(xTaskMatrizNormal);
-
-                vTaskResume(xTaskDisplayNoturna);
-                vTaskSuspend(xTaskDisplayNormal);
-                noturno = true;
-                verde = amarelo = vermelho = false;
-            }
-        }
-        last_time = current;
+        botao_pressionado = true;
     }
 }
 
+void vTaskControle(){
+    const TickType_t xDelay = pdMS_TO_TICKS(20); // Polling a cada 20ms
+    bool debounce = false;
+    absolute_time_t last_press = 0;
+
+    while(true) {
+        if(botao_pressionado) {
+            absolute_time_t now = get_absolute_time();
+            
+            // Debounce - verifica se já passou tempo suficiente
+            if(absolute_time_diff_us(last_press, now) > 200000) { // 200ms
+                last_press = now;
+                modo = !modo; // Alterna o modo
+                
+                // Gerencia as tasks conforme o novo modo
+                if(modo) {
+                    // Modo normal
+                     vTaskResume(xTaskBlinkNormal);
+                    vTaskSuspend(xTaskBlinkNoturna);
+
+                    vTaskResume(xTaskMatrizNormal);
+                    vTaskSuspend(xTaskMatrizNoturna);
+
+                    vTaskResume(xTaskDisplayNormal);
+                    vTaskSuspend(xTaskDisplayNoturna);
+
+                noturno = false;
+                } else {
+                    // Modo noturno
+                    vTaskResume(xTaskBlinkNoturna);
+                    vTaskSuspend(xTaskBlinkNormal);
+
+                    vTaskResume(xTaskMatrizNoturna);
+                    vTaskSuspend(xTaskMatrizNormal);
+
+                    vTaskResume(xTaskDisplayNoturna);
+                    vTaskSuspend(xTaskDisplayNormal);
+                    noturno = true;
+                    verde = amarelo = vermelho = false;
+                }
+            }
+            
+            botao_pressionado = false; // Reseta o flag
+        }
+        
+        vTaskDelay(xDelay); // Espera para próxima verificação
+    }
+}
 
 void setup(){
     // Inicialização do LED RGB
@@ -355,6 +375,9 @@ int main(){
     
     xTaskCreate(vBuzzerTask, "Buzzer Task",
          configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, NULL); 
+
+    // Cria a task de controle de modo com alta prioridade
+    xTaskCreate(vTaskControle, "Controle Task", configMINIMAL_STACK_SIZE, NULL, 2, NULL);
 
     // Inicialmente, suspende a tarefa do modo noturno
         vTaskSuspend(xTaskBlinkNoturna);
