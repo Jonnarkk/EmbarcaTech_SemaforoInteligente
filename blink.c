@@ -222,9 +222,9 @@ void vBuzzerTask(){
             vTaskDelay(pdMS_TO_TICKS(200)); 
         }
         else if(amarelo){
-            for(int i = 0; i < 3; i++){
-                sirene(500, 400, 200);
-                pdMS_TO_TICKS(100);
+            for(int i = 0; i < 5; i++){
+                sirene(500, 400, 100);
+                vTaskDelay(pdMS_TO_TICKS(10)); 
             }
         }
         else if(vermelho){
