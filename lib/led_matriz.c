@@ -58,9 +58,9 @@ void desenhar_proibido() {
     // Padrão do círculo com barra (5x5)
     int proibido[] = {
         1, 1, 1, 1, 1,
+        1, 0, 0, 1, 1,
         1, 0, 1, 0, 1,
-        1, 1, 1, 1, 1,
-        1, 0, 1, 0, 1,
+        1, 1, 0, 0, 1,
         1, 1, 1, 1, 1
     };
 
