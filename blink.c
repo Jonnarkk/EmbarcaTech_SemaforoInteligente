@@ -219,11 +219,11 @@ void vBuzzerTask(){
     while(true){
         if(verde){
             sirene(150, 880, 800);
-            pdMS_TO_TICKS(200); 
+            vTaskDelay(pdMS_TO_TICKS(200)); 
         }
         else if(amarelo){
             for(int i = 0; i < 3; i++){
-                sirene(500, 400, 150);
+                sirene(500, 400, 200);
                 pdMS_TO_TICKS(100);
             }
         }
