@@ -242,30 +242,6 @@ void vDisplayTask_Noturno(){
     }
 }
 
-// Task do Buzzer
-void vBuzzerTask(){
-    while(true){
-        if(verde){
-            sirene(150, 880, 800);
-            vTaskDelay(pdMS_TO_TICKS(200)); 
-        }
-        else if(amarelo){
-            for(int i = 0; i < 5; i++){
-                sirene(500, 400, 100);
-                vTaskDelay(pdMS_TO_TICKS(10)); 
-            }
-        }
-        else if(vermelho){
-            sirene(500, 700, 500);
-            vTaskDelay(pdMS_TO_TICKS(1500)); 
-        }
-        else if(noturno){
-            sirene(300, 250, 1000);
-            vTaskDelay(pdMS_TO_TICKS(2000));
-        }
-    }
-}
-
 // Função para soar o alarme
 void sirene(uint freq_grave, uint freq_agudo, uint duration) {
     uint slice_num = pwm_gpio_to_slice_num(BUZZER);
@@ -290,6 +266,31 @@ void sirene(uint freq_grave, uint freq_agudo, uint duration) {
     // Desliga o BUZZER
     pwm_set_gpio_level(BUZZER, 0);
 }
+
+// Task do Buzzer
+void vBuzzerTask(){
+    while(true){
+        if(verde){
+            sirene(150, 880, 800);
+            vTaskDelay(pdMS_TO_TICKS(200)); 
+        }
+        else if(amarelo){
+            for(int i = 0; i < 5; i++){
+                sirene(500, 400, 100);
+                vTaskDelay(pdMS_TO_TICKS(10)); 
+            }
+        }
+        else if(vermelho){
+            sirene(500, 700, 500);
+            vTaskDelay(pdMS_TO_TICKS(1500)); 
+        }
+        else if(noturno){
+            sirene(300, 250, 1000);
+            vTaskDelay(pdMS_TO_TICKS(2000));
+        }
+    }
+}
+
 
 // Função Handler das interrupções
 void gpio_irq_handler(uint gpio, uint32_t events){
