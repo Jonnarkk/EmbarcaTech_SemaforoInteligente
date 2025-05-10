@@ -25,7 +25,7 @@
 #define endereco 0x3C
 
 // Variáveis globais
-volatile bool modo = true;
+volatile bool modo = true;                                                          // Variável que controla o modo do semáforo
 volatile bool cor = true;                                                           // Variável para utilizar funções no display
 ssd1306_t ssd;                                                                      // Inicializa a estrutura do display
 volatile bool verde = false, vermelho = false, amarelo = false, noturno = false;    // Variáveis para controle do Buzzer
@@ -93,16 +93,19 @@ void vTaskControle(){
 void vBlinkTask_Normal(){
 
     while (true){
+        // Led na cor vermelha
         vermelho = false;
         verde = true;
         gpio_put(led_pin_green, true);
         vTaskDelay(pdMS_TO_TICKS(4000));
-
+        
+        // Led na cor amarela
         verde = false;
         amarelo = true;
         gpio_put(led_pin_red, true);
         vTaskDelay(pdMS_TO_TICKS(4000));
         
+        // led na cor vermelha
         amarelo = false;
         vermelho = true;
         gpio_put(led_pin_blue, false);
@@ -118,6 +121,7 @@ void vBlinkTask_Normal(){
 void vBlinkTask_Noturno(){
 
     while (true){
+        // Led na cor amarela
         gpio_put(led_pin_green, true);
         gpio_put(led_pin_red, true);
         vTaskDelay(pdMS_TO_TICKS(3000));
@@ -128,7 +132,7 @@ void vBlinkTask_Noturno(){
     }
 }
 
-// Função para desenho na matriz de LED's no modo normal
+// Função para desenho na matriz de LED's no modo normal - Chama funções do arquivo led_matriz.c
 void vMatrizTask_Normal(){
     PIO pio = pio0;
     uint sm = 0;
@@ -136,18 +140,23 @@ void vMatrizTask_Normal(){
     pio_matriz_program_init(pio, sm, offset, pino_matriz);
     
     while(true){
+            // Imprime desenho de seta na matriz
             desenhar_seta_direita();
             desenho_pio(0, pio, sm); // Atualiza a matriz de LEDs
             vTaskDelay(pdMS_TO_TICKS(3000));
             limpar_todos_leds();
             desenho_pio(0, pio, sm);
             vTaskDelay(pdMS_TO_TICKS(1000));
+
+            // Imprime desenho de exclamação na matriz
             desenhar_exclamacao();
             desenho_pio(0, pio, sm); // Atualiza a matriz de LEDs
             vTaskDelay(pdMS_TO_TICKS(3000));
             limpar_todos_leds();
             desenho_pio(0, pio, sm);
             vTaskDelay(pdMS_TO_TICKS(1000));
+
+            // Imprime desenho de proibido na matriz
             desenhar_proibido();
             desenho_pio(0, pio, sm); // Atualiza a matriz de LEDs
             vTaskDelay(pdMS_TO_TICKS(3000));
@@ -157,7 +166,7 @@ void vMatrizTask_Normal(){
     }
 }
 
-// Task para desenho na matriz de LED's no modo noturno
+// Task para desenho na matriz de LED's no modo noturno - Chama funções do arquivo led_matriz.c
 void vMatrizTask_Noturna(){
     PIO pio = pio0;
     uint sm = 0;
@@ -165,6 +174,7 @@ void vMatrizTask_Noturna(){
     pio_matriz_program_init(pio, sm, offset, pino_matriz);
     
     while(true){
+            // Imprime desenho de exclamação
             desenhar_exclamacao();
             desenho_pio(0, pio, sm); // Atualiza a matriz de LEDs
             vTaskDelay(pdMS_TO_TICKS(200));
@@ -174,10 +184,11 @@ void vMatrizTask_Noturna(){
     }
 }
 
-// Task para desenho no display no modo normal
+// Task para desenho no display no modo normal - Chama funções do arquivo ssd1306.c
 void vDisplayTask_Normal(){
 
     while(true){
+        // Liga sinaleira na cor verde
         ssd1306_fill(&ssd, !cor);                                   // Limpa o display
         ssd1306_draw_string(&ssd, "VERDE", 10, 10);
         ssd1306_draw_string(&ssd, "AMARELO", 10, 30);
@@ -189,6 +200,8 @@ void vDisplayTask_Normal(){
         ssd1306_rect(&ssd, 3, 108, 3, 56, cor, cor);                // Retângulo cheio direito
         ssd1306_send_data(&ssd);                                    // Atualiza o display
         vTaskDelay(pdMS_TO_TICKS(3980));
+        
+        // Liga sinaleira na cor amarela
         ssd1306_fill(&ssd, !cor);                                   // Limpa o display
         ssd1306_draw_string(&ssd, "VERDE", 10, 10);
         ssd1306_draw_string(&ssd, "AMARELO", 10, 30);
@@ -200,6 +213,8 @@ void vDisplayTask_Normal(){
         ssd1306_rect(&ssd, 3, 108, 3, 56, cor, cor);                // Retângulo cheio direito
         ssd1306_send_data(&ssd);                                    // Atualiza o display
         vTaskDelay(pdMS_TO_TICKS(3980));
+
+        // Liga sinaleira na cor vermelha
         ssd1306_fill(&ssd, !cor);                                   // Limpa o display
         ssd1306_draw_string(&ssd, "VERDE", 10, 10);
         ssd1306_draw_string(&ssd, "AMARELO", 10, 30);
@@ -214,10 +229,11 @@ void vDisplayTask_Normal(){
     }
 }
 
-// Task para desenho no display do modo noturno
+// Task para desenho no display do modo noturno - Chama funções do arquivo ssd1306.c
 void vDisplayTask_Noturno(){
 
     while(true){
+        // Liga sinaleira na cor amarela
         ssd1306_fill(&ssd, !cor);                                   // Limpa o display
         ssd1306_draw_string(&ssd, "VERDE", 10, 10);
         ssd1306_draw_string(&ssd, "AMARELO", 10, 30);
@@ -229,6 +245,8 @@ void vDisplayTask_Noturno(){
         ssd1306_rect(&ssd, 3, 108, 3, 56, cor, cor);                // Retângulo cheio direito
         ssd1306_send_data(&ssd);                                    // Atualiza o display
         vTaskDelay(pdMS_TO_TICKS(2980));
+
+        // Desliga sinaleira
         ssd1306_fill(&ssd, !cor);                                   // Limpa o display
         ssd1306_draw_string(&ssd, "VERDE", 10, 10);
         ssd1306_draw_string(&ssd, "AMARELO", 10, 30);
@@ -244,7 +262,7 @@ void vDisplayTask_Noturno(){
 }
 
 
-// Task do Buzzer
+// Task do Buzzer - Chama função no arquivo sirene.c
 void vBuzzerTask(){
     while(true){
         if(verde){
@@ -271,7 +289,7 @@ void vBuzzerTask(){
 
 // Função Handler das interrupções
 void gpio_irq_handler(uint gpio, uint32_t events){
-    if(gpio == botaoB){
+    if(gpio == botaoB){ // Coloca placa em modo bootsel & limpa matriz
         PIO pio = pio0;
         uint sm = 0;
         uint offset = pio_add_program(pio, &pio_matriz_program);
