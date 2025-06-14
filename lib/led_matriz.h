@@ -2,6 +2,7 @@
 #define LED_MATRIZ_H
 
 #include "hardware/pio.h"
+#include "pio_matriz.pio.h"
 
 #define pino_matriz 7
 #define NUM_PIXELS 25
@@ -22,5 +23,7 @@ void limpar_todos_leds();
 void desenhar_seta_direita();    // Seta verde
 void desenhar_exclamacao();      // Exclamação amarela
 void desenhar_proibido();        // Sinal de proibido vermelho
+
+uint pio_init(PIO pio);
 
 #endif // LED_MATRIZ_H

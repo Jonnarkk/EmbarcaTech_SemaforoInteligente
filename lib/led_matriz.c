@@ -2,6 +2,23 @@
 
 Pixel desenho[NUM_PIXELS] = {0}; // Array global que representa a matriz de LEDs
 
+// Função existente para converter RGB em valor de 32 bits (formato GRB)
+uint32_t matrix_rgb(double b, double r, double g) {
+    return ((uint32_t)(g * 255) << 24) | ((uint32_t)(r * 255) << 16) | (uint32_t)(b * 255) << 8;
+}
+
+// Função existente para enviar os dados para a matriz de LEDs
+void desenho_pio(uint32_t valor_led, PIO pio, uint sm) {
+    for (int16_t i = 0; i < NUM_PIXELS; i++) {
+        valor_led = matrix_rgb(
+            desenho[24-i].b,  // azul
+            desenho[24-i].r,  // vermelho
+            desenho[24-i].g   // verde
+        );
+        pio_sm_put_blocking(pio, sm, valor_led);
+    }
+}
+
 // Função para limpar todos os LEDs (preto)
 void limpar_todos_leds() {
     for (int i = 0; i < NUM_PIXELS; i++) {
@@ -9,6 +26,7 @@ void limpar_todos_leds() {
         desenho[i].g = 0.0;
         desenho[i].b = 0.0;
     }
+    
 }
 
 // Função para desenhar uma seta para a direita (verde)
@@ -80,19 +98,18 @@ void set_pixel_color(int led_index, double r, double g, double b) {
     }
 }
 
-// Função existente para converter RGB em valor de 32 bits (formato GRB)
-uint32_t matrix_rgb(double b, double r, double g) {
-    return ((uint32_t)(g * 255) << 24) | ((uint32_t)(r * 255) << 16) | (uint32_t)(b * 255) << 8;
-}
+uint pio_init(PIO pio){
+    // Ajusta o clock do RP2040 para 128 MHz (128000 kHz)
+    set_sys_clock_khz(128000, false);
 
-// Função existente para enviar os dados para a matriz de LEDs
-void desenho_pio(uint32_t valor_led, PIO pio, uint sm) {
-    for (int16_t i = 0; i < NUM_PIXELS; i++) {
-        valor_led = matrix_rgb(
-            desenho[24-i].b,  // azul
-            desenho[24-i].r,  // vermelho
-            desenho[24-i].g   // verde
-        );
-        pio_sm_put_blocking(pio, sm, valor_led);
-    }
+    // Carrega o programa PIO na memória do PIO e retorna o offset onde ele foi colocado
+    uint offset = pio_add_program(pio, &pio_matriz_program);
+
+    // Reserva um state machine livre (bloqueante) e retorna seu índice
+    uint sm = pio_claim_unused_sm(pio, true);
+
+    // Inicializa o state machine com o programa carregado, definindo pino de saída
+    pio_matriz_program_init(pio, sm, offset, pino_matriz);
+
+    return sm;
 }

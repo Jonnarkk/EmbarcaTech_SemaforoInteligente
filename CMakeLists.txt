@@ -20,7 +20,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(PICO_BOARD pico_w CACHE STRING "Board type")
 include(pico_sdk_import.cmake)
-set(FREERTOS_KERNEL_PATH "C:/Users/Miller/Desktop/FreeRTOS-Kernel")
+set(FREERTOS_KERNEL_PATH "C:/Users/Miller/Desktop/Univasf/Semestre III/Embarca/FreeRTOS-Kernel")
 include(${FREERTOS_KERNEL_PATH}/portable/ThirdParty/GCC/RP2040/FreeRTOS_Kernel_import.cmake)
 
 project(PiscaLed C CXX ASM)
@@ -32,6 +32,7 @@ add_executable(${PROJECT_NAME}
         blink.c 
         lib/ssd1306.c
         lib/led_matriz.c
+        lib/buzzer.c
         )
 
 #target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR})

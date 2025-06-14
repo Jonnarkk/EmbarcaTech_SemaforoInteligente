@@ -1,5 +1,6 @@
 #include "ssd1306.h"
 #include "font.h"
+#include <string.h>
 
 void ssd1306_init(ssd1306_t *ssd, uint8_t width, uint8_t height, bool external_vcc, uint8_t address, i2c_inst_t *i2c) {
   ssd->width = width;
@@ -197,4 +198,10 @@ void ssd1306_draw_string(ssd1306_t *ssd, const char *str, uint8_t x, uint8_t y)
       break;
     }
   }
+}
+
+// Função para centralizar o texto no display de 128x64 pixels
+int centralizar_texto(const char *str) {
+  int largura_texto = strlen(str) * 8;  // Cada caractere ocupa 8 pixels de largura
+  return (128 - largura_texto) / 2;      // Calcula a posição central
 }
